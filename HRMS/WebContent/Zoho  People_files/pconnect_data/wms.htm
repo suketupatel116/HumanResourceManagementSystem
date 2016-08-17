@@ -1,0 +1,365 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  </head>
+  <body onabort="cleanup();" onunload="cleanup();">
+<script>
+document.domain="zoho.com";
+
+/* set up browser checks and add a simple emulation for IE4 */
+// check browsers
+var op = /opera 5|opera\/5/i.test(navigator.userAgent);
+var ie = !op && /msie/i.test(navigator.userAgent);	// preventing opera to be identified as ie
+var mz = !op && /mozilla\/5/i.test(navigator.userAgent);	// preventing opera to be identified as mz
+if (!ie && document.layers)
+
+	var browser_nn4=true
+
+else if (document.layers || (!document.all && document.getElementById))
+
+	var browser_nn6=true
+
+</script>
+<script>
+
+
+//var subDomain = "zoho.com";
+
+var sesTimer;
+var disableevent = false;
+var lastevttime = 0;
+var wmsresponse = new Object();
+wmsresponse['missedseq'] = new Object();
+wmsresponse['droppedseq'] = new Object();
+wmsresponse['dropdispatch'] = new Object();
+var lastSeq = [];
+var prevseq = 0;
+
+function cleanup()
+{
+
+}
+
+
+var reqobjs = [];
+function getUrl(url)
+{    
+	try{
+
+        var wmsEventAjax;
+	var starttime = (new Date()).getTime();
+	lastevttime = starttime;
+	// code for Mozilla, etc.
+	if (window.XMLHttpRequest)
+		wmsEventAjax=new XMLHttpRequest();
+	// code for IE
+	else if (window.ActiveXObject)
+  		wmsEventAjax=new ActiveXObject("Microsoft.XMLHTTP");
+
+               wmsEventAjax.onreadystatechange = function() { wmsEvent(wmsEventAjax, starttime);  }
+	
+
+	wmsEventAjax.open("GET",url+"&nocache="+((new Date()).getTime()),true);
+	wmsEventAjax.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+	if(ie) wmsEventAjax.send(); else wmsEventAjax.send(null);
+
+	reqobjs[0] = reqobjs[1];
+	reqobjs[1] = wmsEventAjax;
+
+     }
+     catch(e){
+	     //alert('unable to connect');
+     } 
+}
+
+
+function wmsEvent(AjaxEvent, evtstarttime)
+{
+	try
+	{
+	if(AjaxEvent.readyState == 4)
+	{
+		if(AjaxEvent.status == 200)
+		{
+			if(lastevttime-evtstarttime > 40000 && AjaxEvent.responseText == "")
+			{
+				return;
+			}
+			var response = AjaxEvent.responseText;
+			var wdata = eval(response);
+			push(wdata);	
+			if(AjaxEvent.responseText != ""){
+				setTimeout("bind()",1);
+			}	
+			try{parent.requestsuccess();}catch(e){}
+		}
+		else
+		{
+			if( reqobjs[0] )
+			{
+				reqobjs[0].abort();
+			}
+			
+			if(AjaxEvent.status!=500 && AjaxEvent.status!=304 && AjaxEvent.status!=404 && AjaxEvent.status!=400)
+			{
+				try{parent.goOffline();}catch(ee){}
+			}
+			setTimeout("bind()",10000);
+		}
+		
+	}
+	}
+	catch(e)
+	{
+		//console.log(e);
+		try{parent.goOffline();}catch(ee){}
+		try
+		{
+			setTimeout("bind()",10000);
+		}
+		catch(e1)
+		{
+		}
+	}	
+}
+
+function disablewms()
+{
+	parent.disablewms();
+}
+
+function isdisablewms()
+{
+	try{
+	return parent.isdisablewms();
+	}catch(e){return false;}
+}
+
+function push(msg)
+{
+     try
+     {
+	     //var oldDomain = document.domain;
+	     //document.domain=subDomain;
+
+	     try
+	     {
+	     	for(i=0;i<msg.length;i++)
+	     	{
+			     try
+			     {	
+			                enrollseq(msg[i]);
+				     	parent.push(msg[i]);
+			     }
+			     catch(e){}
+		}
+	     }
+	     catch(e1)
+	     {		     
+	     }
+	     //document.domain=oldDomain;		     
+     }
+     catch(e)
+     {	     
+     }
+}
+
+function logRetrySuccess(msg)
+{
+        var sid=parent.getSid();
+        if(sid==undefined){return;}
+	var dseqmsg = new Object();
+	dseqmsg[msg["seq"]] = new Date().toString();
+	var dseq = JSON.stringify(dseqmsg);
+	dseqlog("dseq?i="+encodeURIComponent(sid)+"&dseq=RETRYSUCCESS|"+dseq);
+}
+
+
+function enrollseq(msg)
+{
+	try{
+		var currentseq = msg["seq"];
+		lastSeq.push(currentseq);
+		if(msg["retry"]!=undefined){
+			logRetrySuccess(msg);
+			return;
+		}
+		var currentTime = new Date();
+		if(msg["mtype"]==0 || msg["mtype"]==-3 || msg["mtype"]==-1){ prevseq = 0; wmsresponse['missedseq'] = new Object(); wmsresponse['droppedseq'] = new Object(); lastSeq=[]; if(msg["mtype"]==0 )lastSeq.push("0");}
+		if(currentseq - prevseq >=1)                                                                                                                                            {
+			for(var k=prevseq+1;k<currentseq;k++)
+			{
+				wmsresponse['missedseq'][k] = currentTime;
+			}
+			prevseq = currentseq;
+		}
+		else
+		{
+			delete wmsresponse['missedseq'][currentseq];
+		}                                                                                                                
+		confirmwmsdrop();
+	}catch(e){  }
+}
+
+
+function confirmwmsdrop()
+{
+
+	var missedseq = false;
+        for(var mseq in wmsresponse['missedseq'])
+        {
+                missedseq = true;
+                break;
+        }
+        if(!missedseq){ return; }
+
+	var currentTime = new Date();
+	var droppedseqlength = 0;
+	for(var dropseq in wmsresponse['droppedseq'])
+	{
+		droppedseqlength++;
+	}
+	for(var seq in wmsresponse['missedseq'])
+	{
+		if((currentTime - wmsresponse['missedseq'][seq])>180000)
+		{
+			wmsresponse['droppedseq'][seq] = wmsresponse['missedseq'][seq];
+			wmsresponse['dropdispatch'][seq] = wmsresponse['missedseq'][seq].toString();
+			delete wmsresponse['missedseq'][seq];
+			droppedseqlength = droppedseqlength +1;
+			if(droppedseqlength>50)
+			{
+				popdroppedseq();
+			}
+		}
+	}
+	dispatchdrop();
+}
+
+
+
+function dispatchdrop()
+{
+	try{
+		var droppedseq = false;
+		for(var drop in wmsresponse['dropdispatch']){
+			droppedseq = true;
+			break;
+		}
+		if(droppedseq){
+			var sid=parent.getSid();
+			if(sid==undefined){return;}
+			var dseq = JSON.stringify(wmsresponse['dropdispatch']);
+			dseqlog("dseq?i="+encodeURIComponent(sid)+"&dseq="+dseq);
+			wmsresponse['dropdispatch'] = new Object();
+		}
+	}catch(e){}
+}
+
+
+function getdroppedseq()
+{
+	confirmwmsdrop();
+	return wmsresponse['droppedseq'];
+}
+
+function popdroppedseq()
+{
+	for(var i in wmsresponse['droppedseq'])
+	{
+		delete wmsresponse['droppedseq'][i];
+		break;
+	}
+}
+
+function dseqlog(url)
+{
+	try{
+		var wmsDropEventAjax;
+
+		// code for Mozilla, etc.
+		if (window.XMLHttpRequest)
+			wmsDropEventAjax=new XMLHttpRequest();
+		// code for IE
+		else if (window.ActiveXObject)
+			wmsDropEventAjax=new ActiveXObject("Microsoft.XMLHTTP");
+
+		wmsDropEventAjax.open("GET",url+"&nocache="+((new Date()).getTime()),true);
+		wmsDropEventAjax.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+		if(ie) wmsDropEventAjax.send(); else wmsDropEventAjax.send(null);
+	}
+	catch(e){
+	}
+}
+
+
+function register()
+{
+	//var oldDomain = document.domain;
+	//document.domain=subDomain;
+	var prd=parent.getPrd();
+	var uname='';
+	var zuid='';
+	var nname='';
+	var config='';
+	try{uname=parent.getUserName();}catch(e){}
+	try{config=parent.getWmsConfig();}catch(e){}
+	try{zuid=parent.getZuid();}catch(e){}
+	try{nname=parent.getNickName();}catch(e){}
+	//document.domain=oldDomain;
+	var url = "register?prd="+prd;
+	if(uname != ''){url=url+'&uname='+uname;}
+	if(config!== ''){url=url+'&config='+config;}
+	if(zuid != ''){url=url+'&zuid='+zuid;}
+	if(nname != ''){url=url+'&dname='+encodeURIComponent(nname);}
+	try{url=url+'&authtype='+parent.getAuthType();}catch(e){}
+	getUrl(url+'&domain=a');
+}
+
+function bind()
+{
+	if(isdisablewms() || disableevent)return;
+
+	//var oldDomain = document.domain;
+	//document.domain=subDomain;
+	var ck=parent.getPrd()+":"+parent.getUserId();
+	var sid=parent.getSid();
+	if(sid==undefined){return;}
+	var isRecon = parent.isReconnecting();
+	//document.domain=oldDomain;
+	if(!isRecon)
+	{
+		parent.plive();
+		var url = "wmsevent?c="+ck+"&i="+encodeURIComponent(sid);		
+		if(lastSeq.length > 0)
+		{
+			url = url +"&s="+lastSeq.join(",");
+			lastSeq=[];
+		}
+		getUrl(url);
+	}	
+	if(sesTimer!=null)
+	{
+		clearTimeout(sesTimer);
+		sesTimer = null;
+	}
+
+	try
+	{
+		sesTimer = setTimeout("bind()",30000);
+	}
+	catch(e)
+	{
+	}
+}
+
+window.onload = function()
+{
+	register();
+}
+
+</script>
+
+  
+ 
+  
+</body></html>

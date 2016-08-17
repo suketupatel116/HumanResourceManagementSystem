@@ -1,0 +1,77 @@
+/*$Id$*/
+
+.wms-ucd { *width:202px;*height:284px;_border-bottom:1px solid #FFF;}
+.wms-od {  *width:74px;}
+.wms-ucd,.wms-cw {*bottom:22px; bottom:21px;}
+.wmseditor { *width:99%; }
+.wms-gd { margin-left:25px; }
+.wms-option,.wms-option-sel { #margin-right:10px;}
+.wms-option-sel { #margin-right:16px;}
+
+.wmsconcont { *position:relative; }
+.wms-oudl { *position:relative;}
+.wms-gni {
+	height:15px;
+}
+.wmsgrpcont { position:relative; }
+
+#wmsustxt {*height:17px; *padding:3px 0px 0px 0px;}
+
+.arrowdrop,.arrowdrophover,.arrowdropclick { #right:0px; }
+.wms-otu { *margin-bottom:0px;}
+.wms-ddat { *margin-top:0px;}
+.wms-th1{ *height:20px; overflow:hidden;padding:3px 0px;}
+.wms-statesmsg{ *position:fixed;*top:0;*left:0px;}
+.wmsoutertbl tbody td.headertd { padding:10px 0 10px 10px; #padding-bottom:0; text-align:right; }
+.wmsoutertbl tbody td.wms-hdpadbot { padding:0px;}
+.wmsoptiontext { height:16px; width:265px;}
+.wms-bdrrhtn {  height:14px;width:230px;*height:13px;}
+.wms-tab-selected{*width:202px;}
+.wms-rigp,.wms-rigpsel {*width:96%;}
+.wms-addmember-txtbox{*height:15px;*padding-top:3px;}
+.wms-ch,.wms-ch-notify{*padding:5px 0px 4px 0px;}
+
+
+
+/*
+.arrowdrop,.arrowdrophover,.arrowdropclick {
+	right:1px;
+	z-index:10000000000;
+}
+.wmscmd {
+	height: 157px;
+	*height:172px;
+}
+.wms-uddl{
+	height:217px;
+       *height:227px;
+}
+.wmsssd{
+        height:226px;
+        *height:236px;
+}
+.wmssearch {
+        padding: 3px 0px 3px 10px;
+        *padding: 5px 0px 5px 10px;
+        border-bottom: 1px solid #AAA;
+        background-color: #F5F5F5;
+        display:block;
+}	
+.wmstxt{*height:18px;*line-height:16px;}
+
+#wmsustxt { *height:17px; *padding-top:3px;}
+.wmsgrpcont {
+	*height:223px;	
+	}
+*/
+
+
+.wms-addpop-tparw{ background:url(https://img.zohostatic.com/ichat/v42_https/images/bar/addmember/tp-arrow.png) no-repeat 0 bottom; width:18px; height:12px; overflow:hidden; position:relative; top:2px; #top:2px; left:8px;}
+
+.wms-addtxt-box{ #height:15px;}
+.wms-addpopmn{ top:-38px;  }
+.wmspd1 { top:47px; left:21px; #top:50px; }
+.wmsaddmemberdisplay {top:62px; #top:63px; left:4px;}
+.wmscmd { #width:99.8%;}
+
+
